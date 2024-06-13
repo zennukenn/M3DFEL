@@ -84,9 +84,9 @@ class Solver(object):
             print(inf)
 
             # train the model for one epoch
-            train_acc, train_loss = self.train(epoch)
+            train_acc, train_loss, train_label_acc = self.train(epoch)
             # validate the model
-            val_acc, val_loss = self.validate(epoch)
+            val_acc, val_loss, val_label_acc = self.validate(epoch)
 
             # remember best acc and save checkpoint
             is_best = (val_acc[0] > self.best_wa) or (
@@ -103,7 +103,7 @@ class Solver(object):
             # print and save log
             epoch_time = time.time() - start_time
             msg = self.get_acc_msg(epoch, train_acc, train_loss, val_acc, val_loss,
-                                   self.best_wa, self.best_ua, epoch_time)
+                                   self.best_wa, self.best_ua, epoch_time, train_label_acc, val_label_acc)
             with open(self.log_path, 'a') as f:
                 f.write(msg)
             print(msg)
@@ -128,7 +128,7 @@ class Solver(object):
                 figure.savefig(fig_path)
                 plt.close()
 
-        return self.best_ua, self.best_ua
+        return self.best_wa, self.best_ua
 
     def train(self, epoch):
         """ Train the model for one eopch
@@ -148,13 +148,13 @@ class Solver(object):
 
             output = self.model(images)
 
-            loss = self.criterion(output, target)
+            loss = sum([self.criterion(output[:, j, :], target[:, j]) for j in range(target.size(1))])
 
-            pred = torch.argmax(output, 1).cpu().detach().numpy()
+            pred = torch.argmax(output, 2).cpu().detach().numpy()
             target = target.cpu().numpy()
 
-            all_pred.extend(pred)
-            all_target.extend(target)
+            all_pred.append(pred)
+            all_target.append(target)
             all_loss += loss.item()
 
             self.optimizer.zero_grad()
@@ -162,15 +162,21 @@ class Solver(object):
             self.optimizer.step()
             self.scheduler.step_update(epoch * len(self.train_dataloader) + i)
 
+        all_pred = np.concatenate(all_pred, axis=0)
+        all_target = np.concatenate(all_target, axis=0)
+
         # WAR
-        acc1 = accuracy_score(all_target, all_pred)
+        acc1 = accuracy_score(all_target.flatten(), all_pred.flatten())
 
         # UAR
-        acc2 = balanced_accuracy_score(all_target, all_pred)
+        acc2 = balanced_accuracy_score(all_target.flatten(), all_pred.flatten())
+
+        # Label-wise accuracy
+        label_acc = [accuracy_score(all_target[:, i], all_pred[:, i]) for i in range(all_target.shape[1])]
 
         loss = all_loss / len(self.train_dataloader)
 
-        return [acc1, acc2], loss
+        return [acc1, acc2], loss, label_acc
 
     def validate(self, epoch):
         """Validate the model for one epoch
@@ -191,25 +197,31 @@ class Solver(object):
             with torch.no_grad():
                 output = self.model(images)
 
-            loss = self.criterion(output, target)
+            loss = sum([self.criterion(output[:, j, :], target[:, j]) for j in range(target.size(1))])
 
-            pred = torch.argmax(output, 1).cpu().detach().numpy()
+            pred = torch.argmax(output, 2).cpu().detach().numpy()
             target = target.cpu().numpy()
 
-            all_pred.extend(pred)
-            all_target.extend(target)
+            all_pred.append(pred)
+            all_target.append(target)
             all_loss += loss.item()
 
+        all_pred = np.concatenate(all_pred, axis=0)
+        all_target = np.concatenate(all_target, axis=0)
+
         # WAR
-        acc1 = accuracy_score(all_target, all_pred)
+        acc1 = accuracy_score(all_target.flatten(), all_pred.flatten())
 
         # UAR
-        acc2 = balanced_accuracy_score(all_target, all_pred)
+        acc2 = balanced_accuracy_score(all_target.flatten(), all_pred.flatten())
 
-        c_m = confusion_matrix(all_target, all_pred)
+        # Label-wise accuracy
+        label_acc = [accuracy_score(all_target[:, i], all_pred[:, i]) for i in range(all_target.shape[1])]
+
+        c_m = confusion_matrix(all_target.flatten(), all_pred.flatten())
         loss = all_loss / len(self.test_dataloader)
 
-        return [acc1, acc2, c_m], loss
+        return [acc1, acc2, c_m], loss, label_acc
 
     def save(self, state, is_best):
         # save the best model
@@ -223,14 +235,18 @@ class Solver(object):
             self.args.output_path, "model_latest.pth")
         torch.save(state, checkpoint_path)
 
-    def get_acc_msg(self, epoch, train_acc, train_loss, val_acc, val_loss, best_wa, best_ua, epoch_time):
+    def get_acc_msg(self, epoch, train_acc, train_loss, val_acc, val_loss, best_wa, best_ua, epoch_time, train_label_acc, val_label_acc):
+        label_acc_msg = "\n".join([f"Label {i} - Train: {train_label_acc[i]:.2%}, Val: {val_label_acc[i]:.2%}" for i in range(len(train_label_acc))])
         msg = """\nEpoch {} Train\t: WA:{:.2%}, \tUA:{:.2%}, \tloss:{:.4f}
                    Epoch {} Test\t: WA:{:.2%}, \tUA:{:.2%}, \tloss:{:.4f}
                    Epoch {} Best\t: WA:{:.2%}, \tUA:{:.2%}
-                   Epoch {} Time\t: {:.1f}s\n\n""".format(epoch, train_acc[0], train_acc[1], train_loss, 
-                                                          epoch, val_acc[0], val_acc[1], val_loss, 
-                                                          epoch, best_wa, best_ua, epoch, epoch_time)
+                   Epoch {} Time\t: {:.1f}s
+                   Label-wise Accuracy:\n{}\n\n""".format(epoch, train_acc[0], train_acc[1], train_loss,
+                                                          epoch, val_acc[0], val_acc[1], val_loss,
+                                                          epoch, best_wa, best_ua, epoch, epoch_time,
+                                                          label_acc_msg)
         return msg
+
 
     def get_confusion_msg(self, confusion_matrix):
         # change the format of cunfusion matrix to print

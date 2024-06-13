@@ -7,12 +7,6 @@ from utils import *
 
 
 class M3DFEL(nn.Module):
-    """The proposed M3DFEL framework
-
-    Args:
-        args
-    """
-
     def __init__(self, args):
         super(M3DFEL, self).__init__()
 
@@ -37,15 +31,16 @@ class M3DFEL(nn.Module):
         self.to_qkv = nn.Linear(
             1024, (self.dim_head * self.heads) * 3, bias=False)
 
-        self.norm = DMIN(num_features=1024)
+        # self.norm = DMIN(num_features=1024)
+        self.norm = nn.LayerNorm(1024)
         self.pwconv = nn.Conv1d(self.bag_size, 1, 3, 1, 1)
 
         # classifier
-        self.fc = nn.Linear(1024, self.args.num_classes)
+        self.fc = nn.ModuleList([nn.Linear(1024, 4) for _ in range(self.args.num_classes)])
         self.Softmax = nn.Softmax(dim=-1)
 
     def MIL(self, x):
-        """The Multi Instance Learning Agregation of instances
+        """The Multi Instance Learning Aggregation of instances
 
         Inputs:
             x: [batch, bag_size, 512]
@@ -72,7 +67,6 @@ class M3DFEL(nn.Module):
         return x
 
     def forward(self, x):
-
         # [batch, 16, 3, 112, 112]
         x = rearrange(x, 'b (t1 t2) c h w -> (b t1) c t2 h w',
                       t1=self.bag_size, t2=self.instance_length)
@@ -88,7 +82,9 @@ class M3DFEL(nn.Module):
 
         x = self.pwconv(x).squeeze()
         # [batch, 1024]
-        out = self.fc(x)
-        # [batch, 7]
+
+        # [batch, num_classes, 4]
+        out = torch.stack([fc(x) for fc in self.fc], dim=1)
+
 
         return out

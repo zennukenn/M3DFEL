@@ -1,6 +1,7 @@
 from .dataset_DFEW import DFEWDataset
+from .dataset_daisee import DaiseeDataset
 import torch
-
+from torchsampler import ImbalancedDatasetSampler
 
 def create_dataloader(args, mode):
     """create dataloader according to args and training/testing mode
@@ -12,8 +13,8 @@ def create_dataloader(args, mode):
     Returns:
         dataloader
     """
-    dataset = DFEWDataset(args, mode)
-
+    # dataset = DFEWDataset(args, mode)
+    dataset = DaiseeDataset(args, mode)
     dataloader = None
 
     # return train_dataset or test_dataset according to the mode

@@ -14,7 +14,7 @@ class Options(object):
 
         # basic settings
         parser.add_argument('--mode', type=str, default="train")
-        parser.add_argument('--dataset', type=str, default="DFEW")
+        parser.add_argument('--dataset', type=str, default="daisee")
         parser.add_argument('--gpu_ids', type=str, default='0',
                             help='gpu ids, eg. 0,1,2; -1 for cpu.')
         parser.add_argument('--resume', default=None, type=str,
@@ -32,10 +32,10 @@ class Options(object):
                             metavar='N', help='number of total epochs to run')
         parser.add_argument('-b', '--batch_size',
                             default=8, type=int, metavar='N')
-        parser.add_argument('--num_classes', default=7, type=int)
+        parser.add_argument('--num_classes', default=4, type=int)
 
         # model settings
-        parser.add_argument('--num_frames', default=16,
+        parser.add_argument('--num_frames', default=28,
                             type=int, help='number of frames')
         parser.add_argument('--instance_length', default=4,
                             type=int, metavar='N', help='instance length')
@@ -56,7 +56,7 @@ class Options(object):
         parser.add_argument('-o', '--optimizer',
                             default="AdamW", type=str, metavar='Opti')
         parser.add_argument('--lr', '--learning_rate',
-                            default=5e-4, type=float, metavar='LR', dest='lr')
+                            default=1e-2, type=float, metavar='LR', dest='lr')
         parser.add_argument('--momentum', default=0.9, type=float, metavar='M')
         parser.add_argument('--wd', '--weight_decay', default=0.05,
                             type=float, metavar='W', dest='weight_decay')
@@ -65,7 +65,7 @@ class Options(object):
 
         # scheduler
         parser.add_argument('--lr_scheduler', default="cosine", type=str)
-        parser.add_argument('--warmup_epochs', default=20, type=int)
+        parser.add_argument('--warmup_epochs', default=5, type=int)
         parser.add_argument('--min_lr', default=5e-6, type=float)
         parser.add_argument('--warmup_lr', default=0, type=float)
 
@@ -104,6 +104,12 @@ class Options(object):
                 args.root, "FERV39K/FERV39k/4_setups/All_scenes/train_All.csv")
             args.test_dataset = os.path.join(
                 args.root, "FERV39K/FERV39k/4_setups/All_scenes/test_All.csv")
+            args.five_fold = False
+        elif args.dataset == "daisee":
+            args.train_dataset = os.path.join(
+                args.root, "D:/dataset/DAiSEE_notest/Labels/TrainLabels.csv")
+            args.test_dataset = os.path.join(
+                args.root, "D:/dataset/DAiSEE_notest/Labels/ValidationLabels.csv")
             args.five_fold = False
 
         # set the fold
