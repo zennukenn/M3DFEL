@@ -1,0 +1,11 @@
+# 忽略所有 .log 文件
+*.log
+
+# 忽略目录
+outputs/
+datasets/DFEW/
+# 忽略特定文件
+/path/to/file.txt
+
+# 忽略所有 .env 文件
+*.env
