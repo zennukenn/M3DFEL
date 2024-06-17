@@ -56,7 +56,7 @@ class Options(object):
         parser.add_argument('-o', '--optimizer',
                             default="AdamW", type=str, metavar='Opti')
         parser.add_argument('--lr', '--learning_rate',
-                            default=1e-2, type=float, metavar='LR', dest='lr')
+                            default=5e-4, type=float, metavar='LR', dest='lr')
         parser.add_argument('--momentum', default=0.9, type=float, metavar='M')
         parser.add_argument('--wd', '--weight_decay', default=0.05,
                             type=float, metavar='W', dest='weight_decay')
@@ -66,7 +66,7 @@ class Options(object):
 
         # scheduler
         parser.add_argument('--lr_scheduler', default="cosine", type=str)
-        parser.add_argument('--warmup_epochs', default=5, type=int)
+        parser.add_argument('--warmup_epochs', default=20, type=int)
         parser.add_argument('--min_lr', default=5e-6, type=float)
         parser.add_argument('--warmup_lr', default=0, type=float)
 
