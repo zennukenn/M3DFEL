@@ -23,7 +23,7 @@ class Solver(object):
 
         self.args = args
         self.log_path = os.path.join(self.args.output_path, "log.txt")
-        self.emotions = ["hap", "sad", "neu", "ang", "sur", "dis", "fea"]
+        self.emotions = ["0", "1", "2", "3"]
         self.best_wa = 0
         self.best_ua = 0
 
@@ -108,12 +108,14 @@ class Solver(object):
                 f.write(msg)
             print(msg)
 
+            # print confusion matrix
+            cm_msg = self.get_confusion_msg(val_acc[2])
+            with open(self.log_path, 'a') as f:
+                f.write(cm_msg)
+            print(cm_msg)
+
             if is_best:
-                # print confusion matrix
-                cm_msg = self.get_confusion_msg(val_acc[2])
-                with open(self.log_path, 'a') as f:
-                    f.write(cm_msg)
-                print(cm_msg)
+
 
                 # convert confusion matrix to heatmap
                 cm = []
@@ -147,10 +149,10 @@ class Solver(object):
             target = target.to(self.device)
 
             output = self.model(images)
+            loss = self.criterion(output, target)
 
-            loss = sum([self.criterion(output[:, j, :], target[:, j]) for j in range(target.size(1))])
 
-            pred = torch.argmax(output, 2).cpu().detach().numpy()
+            pred = torch.argmax(output, dim=1).cpu().detach().numpy()
             target = target.cpu().numpy()
 
             all_pred.append(pred)
@@ -166,17 +168,14 @@ class Solver(object):
         all_target = np.concatenate(all_target, axis=0)
 
         # WAR
-        acc1 = accuracy_score(all_target.flatten(), all_pred.flatten())
+        acc1 = accuracy_score(all_target, all_pred)
 
         # UAR
-        acc2 = balanced_accuracy_score(all_target.flatten(), all_pred.flatten())
-
-        # Label-wise accuracy
-        label_acc = [accuracy_score(all_target[:, i], all_pred[:, i]) for i in range(all_target.shape[1])]
+        acc2 = balanced_accuracy_score(all_target, all_pred)
 
         loss = all_loss / len(self.train_dataloader)
 
-        return [acc1, acc2], loss, label_acc
+        return [acc1, acc2], loss, None
 
     def validate(self, epoch):
         """Validate the model for one epoch
@@ -197,9 +196,9 @@ class Solver(object):
             with torch.no_grad():
                 output = self.model(images)
 
-            loss = sum([self.criterion(output[:, j, :], target[:, j]) for j in range(target.size(1))])
+            loss = self.criterion(output, target)
 
-            pred = torch.argmax(output, 2).cpu().detach().numpy()
+            pred = torch.argmax(output, dim=1).cpu().detach().numpy()
             target = target.cpu().numpy()
 
             all_pred.append(pred)
@@ -210,18 +209,15 @@ class Solver(object):
         all_target = np.concatenate(all_target, axis=0)
 
         # WAR
-        acc1 = accuracy_score(all_target.flatten(), all_pred.flatten())
+        acc1 = accuracy_score(all_target, all_pred)
 
         # UAR
-        acc2 = balanced_accuracy_score(all_target.flatten(), all_pred.flatten())
+        acc2 = balanced_accuracy_score(all_target, all_pred)
 
-        # Label-wise accuracy
-        label_acc = [accuracy_score(all_target[:, i], all_pred[:, i]) for i in range(all_target.shape[1])]
-
-        c_m = confusion_matrix(all_target.flatten(), all_pred.flatten())
+        c_m = confusion_matrix(all_target, all_pred)
         loss = all_loss / len(self.test_dataloader)
 
-        return [acc1, acc2, c_m], loss, label_acc
+        return [acc1, acc2, c_m], loss, None
 
     def save(self, state, is_best):
         # save the best model
@@ -235,18 +231,15 @@ class Solver(object):
             self.args.output_path, "model_latest.pth")
         torch.save(state, checkpoint_path)
 
-    def get_acc_msg(self, epoch, train_acc, train_loss, val_acc, val_loss, best_wa, best_ua, epoch_time, train_label_acc, val_label_acc):
-        label_acc_msg = "\n".join([f"Label {i} - Train: {train_label_acc[i]:.2%}, Val: {val_label_acc[i]:.2%}" for i in range(len(train_label_acc))])
+    def get_acc_msg(self, epoch, train_acc, train_loss, val_acc, val_loss, best_wa, best_ua, epoch_time,
+                    train_label_acc, val_label_acc):
         msg = """\nEpoch {} Train\t: WA:{:.2%}, \tUA:{:.2%}, \tloss:{:.4f}
-                   Epoch {} Test\t: WA:{:.2%}, \tUA:{:.2%}, \tloss:{:.4f}
-                   Epoch {} Best\t: WA:{:.2%}, \tUA:{:.2%}
-                   Epoch {} Time\t: {:.1f}s
-                   Label-wise Accuracy:\n{}\n\n""".format(epoch, train_acc[0], train_acc[1], train_loss,
-                                                          epoch, val_acc[0], val_acc[1], val_loss,
-                                                          epoch, best_wa, best_ua, epoch, epoch_time,
-                                                          label_acc_msg)
+                    Epoch {} Test\t: WA:{:.2%}, \tUA:{:.2%}, \tloss:{:.4f}
+                    Epoch {} Best\t: WA:{:.2%}, \tUA:{:.2%}
+                    Epoch {} Time\t: {:.1f}s\n\n""".format(epoch, train_acc[0], train_acc[1], train_loss,
+                                                           epoch, val_acc[0], val_acc[1], val_loss,
+                                                           epoch, best_wa, best_ua, epoch, epoch_time)
         return msg
-
 
     def get_confusion_msg(self, confusion_matrix):
         # change the format of cunfusion matrix to print

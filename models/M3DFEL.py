@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torchvision.models.video import r3d_18, R3D_18_Weights
 from einops import rearrange
-
+from .R3D34 import R3D_34
 from utils import *
 
 
@@ -31,12 +31,12 @@ class M3DFEL(nn.Module):
         self.to_qkv = nn.Linear(
             1024, (self.dim_head * self.heads) * 3, bias=False)
 
-        # self.norm = DMIN(num_features=1024)
-        self.norm = nn.LayerNorm(1024)
+        self.norm = DMIN(num_features=1024)
+        # self.norm = nn.LayerNorm(1024)
         self.pwconv = nn.Conv1d(self.bag_size, 1, 3, 1, 1)
 
         # classifier
-        self.fc = nn.ModuleList([nn.Linear(1024, 4) for _ in range(self.args.num_classes)])
+        self.fc = nn.Linear(1024, self.args.num_classes)
         self.Softmax = nn.Softmax(dim=-1)
 
     def MIL(self, x):
@@ -84,7 +84,7 @@ class M3DFEL(nn.Module):
         # [batch, 1024]
 
         # [batch, num_classes, 4]
-        out = torch.stack([fc(x) for fc in self.fc], dim=1)
+        out = self.fc(x)
 
 
         return out

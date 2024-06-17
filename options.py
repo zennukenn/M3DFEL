@@ -28,14 +28,14 @@ class Options(object):
         # numeric settings
         parser.add_argument('--workers', default=8, type=int,
                             metavar='N', help='number of data loading workers')
-        parser.add_argument('--epochs', default=300, type=int,
+        parser.add_argument('--epochs', default=100, type=int,
                             metavar='N', help='number of total epochs to run')
         parser.add_argument('-b', '--batch_size',
                             default=8, type=int, metavar='N')
         parser.add_argument('--num_classes', default=4, type=int)
 
         # model settings
-        parser.add_argument('--num_frames', default=28,
+        parser.add_argument('--num_frames', default=16,
                             type=int, help='number of frames')
         parser.add_argument('--instance_length', default=4,
                             type=int, metavar='N', help='instance length')
@@ -62,6 +62,7 @@ class Options(object):
                             type=float, metavar='W', dest='weight_decay')
         parser.add_argument('--eps', default=1e-8, type=float, metavar='EPSILON',
                             help='Optimizer Epsilon (default: 1e-8)')
+        parser.add_argument('--label_index', default=1, type=int)
 
         # scheduler
         parser.add_argument('--lr_scheduler', default="cosine", type=str)
@@ -107,9 +108,9 @@ class Options(object):
             args.five_fold = False
         elif args.dataset == "daisee":
             args.train_dataset = os.path.join(
-                args.root, "D:/dataset/DAiSEE_notest/Labels/TrainLabels.csv")
+                args.root, "D:\\dataset\\DAiSEE\\Labels\\TrainLabels.csv")
             args.test_dataset = os.path.join(
-                args.root, "D:/dataset/DAiSEE_notest/Labels/ValidationLabels.csv")
+                args.root, "D:/dataset/DAiSEE/Labels/TestLabels.csv")
             args.five_fold = False
 
         # set the fold
