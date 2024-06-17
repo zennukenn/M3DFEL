@@ -14,7 +14,7 @@ class Options(object):
 
         # basic settings
         parser.add_argument('--mode', type=str, default="train")
-        parser.add_argument('--dataset', type=str, default="daisee")
+        parser.add_argument('--dataset', type=str, default="DFEW")
         parser.add_argument('--gpu_ids', type=str, default='0',
                             help='gpu ids, eg. 0,1,2; -1 for cpu.')
         parser.add_argument('--resume', default=None, type=str,
@@ -32,7 +32,7 @@ class Options(object):
                             metavar='N', help='number of total epochs to run')
         parser.add_argument('-b', '--batch_size',
                             default=8, type=int, metavar='N')
-        parser.add_argument('--num_classes', default=4, type=int)
+        parser.add_argument('--num_classes', default=7, type=int)
 
         # model settings
         parser.add_argument('--num_frames', default=16,
@@ -77,7 +77,7 @@ class Options(object):
         parser = self.initialize()
         args = parser.parse_args()
         if not hasattr(args, 'root'):
-            args.root = 'datasets/DFEW'  # 您需要提供合适的默认路径
+            args.root = 'D:/dataset/'  # 您需要提供合适的默认路径
         # change the format of gpu_ids for set_device
         str_ids = args.gpu_ids.split(',')
         args.gpu_ids = []
@@ -97,9 +97,9 @@ class Options(object):
         # init the csv file path of different datasets
         if args.dataset == "DFEW":
             args.train_dataset = os.path.join(
-                args.root, "EmoLabel_DataSplit/train(single-labeled)/set_X.csv")
+                args.root, "DFEW/EmoLabel_DataSplit/train(single-labeled)/set_X.csv")
             args.test_dataset = os.path.join(
-                args.root, "EmoLabel_DataSplit/test(single-labeled)/set_X.csv")
+                args.root, "DFEW/EmoLabel_DataSplit/test(single-labeled)/set_X.csv")
         elif args.dataset == "FERV39K":
             args.train_dataset = os.path.join(
                 args.root, "FERV39K/FERV39k/4_setups/All_scenes/train_All.csv")

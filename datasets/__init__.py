@@ -15,16 +15,16 @@ def create_dataloader(args, mode):
     Returns:
         dataloader
     """
-    # dataset = DFEWDataset(args, mode)
-    dataset = DaiseeDataset(args, mode)
+    dataset = DFEWDataset(args, mode)
+    # dataset = DaiseeDataset(args, mode)
     dataloader = None
 
     # return train_dataset or test_dataset according to the mode
     if mode == "train":
         dataloader = data.DataLoader(dataset,
                                      batch_size=args.batch_size,
-                                     sampler=ImbalancedDatasetSampler(dataset),
-                                     # shuffle=True,
+                                     # sampler=ImbalancedDatasetSampler(dataset),
+                                     shuffle=True,
                                      num_workers=args.workers,
                                      pin_memory=True,
                                      drop_last=True)

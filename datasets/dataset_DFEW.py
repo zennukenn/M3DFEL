@@ -42,7 +42,7 @@ class DFEWDataset(data.Dataset):
         full_data = []
 
         npy_path = self.path.replace('csv', 'npy')
-        print("loading data")
+        print("loading DFEW")
 
         # save/load the data to/from npy file
         if os.path.exists(npy_path):
@@ -61,7 +61,8 @@ class DFEWDataset(data.Dataset):
 
                     # combine the path
                     path = os.path.join(
-                        self.args.root, "Clip/clip_224x224/", path)
+                        self.args.root, "DFEW/Clip/clip_224x224/", path)
+
                     full_num_frames = len(os.listdir(path))
 
                     # get the paths of the frames of a video and sort
@@ -74,8 +75,8 @@ class DFEWDataset(data.Dataset):
                                       "num_frames": full_num_frames})
 
                 np.save(npy_path, full_data)
-
-        print("data loaded")
+        print(full_data[1])
+        print("DFEW loaded")
         return full_data
 
     def get_transform(self):
