@@ -1,5 +1,5 @@
 from .M3DFEL import M3DFEL
-from .R3D import R3D_50
+from .R3D50 import R3D_50
 
 def create_model(args):
     """create model according to args

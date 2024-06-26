@@ -41,36 +41,43 @@ class DaiseeDataset(data.Dataset):
         """
         full_data = []
 
-        print("loading data")
+        npy_path = self.path.replace('csv', 'npy')
+        print("loading DAiSEE")
 
-        with open(self.path, 'r') as f:
-            reader = csv.reader(f)
-            next(reader)
-            for row in reader:
-                pathname = row[0].split('.')[0]
-                path_person = pathname[:6]
+        # save/load the data to/from npy file
+        if os.path.exists(npy_path):
+            full_data = np.load(npy_path, allow_pickle=True)
+        else:
+            with open(self.path, 'r') as f:
+                reader = csv.reader(f)
+                next(reader)
+                for row in reader:
 
-                label = int(row[self.args.label_index])
+                    pathname = row[0].split('.')[0]
+                    path_person = pathname[:6]
+                    emotion = int(row[self.args.label_index])
 
-                # Combine the path
-                if self.mode == "train":
+                    # Combine the path
+                    if self.mode == "train":
 
-                    path = os.path.join("D:\\dataset\\DAiSEE\\DataSet\\Train", path_person, pathname, "output",
-                                        "selected")
-                elif self.mode == "test":
-                    path = os.path.join("D:\\dataset\\DAiSEE\\DataSet\\Test",path_person, pathname, "output",
-                                        "selected")
+                        path = os.path.join("D:\\dataset\\DAiSEE\\DataSet\\Train", path_person, pathname, "output",
+                                            "selected")
+                    elif self.mode == "test":
+                        path = os.path.join("D:\\dataset\\DAiSEE\\DataSet\\Test", path_person, pathname, "output",
+                                            "selected")
+                    else:
+                        print("mode error")
 
-                full_num_frames = len(os.listdir(path))
-                # Get the paths of the frames of a video and sort them
-                full_video_frames_paths = glob.glob(os.path.join(path, '*.bmp'))
-                full_video_frames_paths.sort()
+                    full_num_frames = len(os.listdir(path))
+                    # Get the paths of the frames of a video and sort them
+                    full_video_frames_paths = glob.glob(os.path.join(path, '*.bmp'))
+                    full_video_frames_paths.sort()
 
-                full_data.append({"path": full_video_frames_paths,
-                                  "labels": label,
-                                  "num_frames": full_num_frames})
-
-        print("daisee loaded")
+                    full_data.append({"path": full_video_frames_paths,
+                                      "emotion": emotion,
+                                      "num_frames": full_num_frames})
+                np.save(npy_path, full_data)
+        print("DAiSEE loaded")
 
         return full_data
 
@@ -107,8 +114,6 @@ class DaiseeDataset(data.Dataset):
         if not full_num_frames == self.args.num_frames:
             print(f"{full_video_frames_paths}!!")
 
-
-
         # get the images and transform
         images = []
         for video_frames_path in full_video_frames_paths:
@@ -117,10 +122,7 @@ class DaiseeDataset(data.Dataset):
         images = torch.reshape(
             images, (-1, 3, self.image_size, self.image_size))
 
-        # images = images.permute(1, 0, 2, 3)  # 调整为 (channels, depth, height, width)
-        labels = torch.tensor(data["labels"])
-
-        return images, labels
+        return images, data["emotion"]
 
     def __len__(self):
         return len(self.data)

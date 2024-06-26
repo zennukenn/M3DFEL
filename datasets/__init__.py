@@ -15,8 +15,8 @@ def create_dataloader(args, mode):
     Returns:
         dataloader
     """
-    dataset = DFEWDataset(args, mode)
-    # dataset = DaiseeDataset(args, mode)
+    # dataset = DFEWDataset(args, mode)
+    dataset = DaiseeDataset(args, mode)
     dataloader = None
 
     # return train_dataset or test_dataset according to the mode

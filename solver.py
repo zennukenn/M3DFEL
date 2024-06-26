@@ -23,7 +23,7 @@ class Solver(object):
 
         self.args = args
         self.log_path = os.path.join(self.args.output_path, "log.txt")
-        self.emotions = ["0", "1", "2", "3","4", "5", "6"]
+        self.emotions = ["0", "1", "2", "3"]
         self.best_wa = 0
         self.best_ua = 0
 
