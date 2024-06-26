@@ -14,7 +14,7 @@ class Options(object):
 
         # basic settings
         parser.add_argument('--mode', type=str, default="train")
-        parser.add_argument('--dataset', type=str, default="DFEW")
+        parser.add_argument('--dataset', type=str, default="daisee")
         parser.add_argument('--gpu_ids', type=str, default='0',
                             help='gpu ids, eg. 0,1,2; -1 for cpu.')
         parser.add_argument('--resume', default=None, type=str,
@@ -32,7 +32,7 @@ class Options(object):
                             metavar='N', help='number of total epochs to run')
         parser.add_argument('-b', '--batch_size',
                             default=8, type=int, metavar='N')
-        parser.add_argument('--num_classes', default=7, type=int)
+        parser.add_argument('--num_classes', default=4, type=int)
 
         # model settings
         parser.add_argument('--num_frames', default=16,
