@@ -89,14 +89,14 @@ class DaiseeDataset(data.Dataset):
         """
         transform = None
         if self.mode == "train":
-            transform = torchvision.transforms.Compose([GroupResize(self.image_size),
+            transform = torchvision.transforms.Compose([
                                                         GroupRandomHorizontalFlip(),
                                                         GroupColorJitter(
                                                             self.args.color_jitter),
                                                         Stack(),
                                                         ToTorchFormatTensor()])
         elif self.mode == "test":
-            transform = torchvision.transforms.Compose([GroupResize(self.image_size),
+            transform = torchvision.transforms.Compose([
                                                         Stack(),
                                                         ToTorchFormatTensor()])
 
